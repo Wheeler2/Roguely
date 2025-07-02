@@ -5,7 +5,7 @@ using Roguely.Core.Entities;
 
 namespace Roguely.Core;
 
-public abstract class Entity
+public class Entity : IDisposable
 {
     public readonly Guid Id;
     public Entity()
@@ -14,6 +14,11 @@ public abstract class Entity
         _components = new HashSet<IComponent>();
 
         EntityManager.RegisterEntity(this);
+    }
+
+    ~Entity()
+    {
+        Dispose();
     }
 
     protected HashSet<IComponent> _components = new();
@@ -126,4 +131,19 @@ public abstract class Entity
     protected virtual void OnEnabled() { }
     protected virtual void OnDisabled() { }
     protected virtual void Update() { }
+
+    public void Dispose()
+    {
+        // Clean up components
+        foreach (var component in _components)
+        {
+            component.Destroy();
+        }
+        _components.Clear();
+
+        // Unregister from the entity manager
+        EntityManager.UnregisterEntity(this);
+
+        GC.SuppressFinalize(this);
+    }
 }

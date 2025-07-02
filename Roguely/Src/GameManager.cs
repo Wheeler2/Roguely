@@ -28,9 +28,14 @@ public class GameManager : Game
     {
         RendererManager.Initialize(_graphics);
 
-        Player player = new Player();
-
         base.Initialize();
+    }
+
+    protected override void BeginRun()
+    {
+        new Player();
+
+        base.BeginRun();
     }
 
     protected override void LoadContent()

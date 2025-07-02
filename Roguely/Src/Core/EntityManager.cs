@@ -27,7 +27,7 @@ public static class EntityManager
         _entitiesToAdd.Enqueue(entity);
     }
 
-    public static void RemoveEntity(Entity entity)
+    public static void UnregisterEntity(Entity entity)
     {
         if (entity == null)
             throw new ArgumentNullException(nameof(entity));
