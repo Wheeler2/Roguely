@@ -1,31 +1,44 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Roguely.Core;
+using Roguely.Core.Rendering;
 
-namespace Roguely.Rendering;
+namespace Roguely.Core.Components;
 
-public class SpriteRenderer : IComponent
+public class SpriteRenderer : IComponent, IRenderer
 {
-    public SpriteRenderer(Texture2D texture, Vector2 position)
+    public SpriteRenderer(Sprite sprite, Vector2 position)
     {
-        Texture = texture;
+        Sprite = sprite;
         _position = position;
     }
 
-    public SpriteRenderer(Texture2D texture, Transform parentTransform)
+    public SpriteRenderer(Sprite sprite, Transform parentTransform = null)
     {
-        Texture = texture;
+        Sprite = sprite;
         _parentTransform = parentTransform;
-        _position = parentTransform.Position;
+
+        if (_parentTransform != null)
+            _position = _parentTransform.Position;
     }
 
-    public Texture2D Texture { get; set; }
-    public Color Color { get; set; } = Color.White;
+    public Sprite Sprite { get; set; }
 
+    private Entity _parentEntity;
     private Transform _parentTransform;
     private Vector2 _position;
+    private float _layerDepth = 0f;
 
-    public void Update(float deltaTime)
+    public void Init()
+    {
+        if (_parentTransform != null)
+        {
+            _position = _parentTransform.Position;
+        }
+
+        RendererManager.RegisterRenderer(this);
+    }
+
+    public void Update()
     {
         if (_parentTransform != null)
         {
@@ -35,31 +48,34 @@ public class SpriteRenderer : IComponent
 
     public void Draw(SpriteBatch spriteBatch)
     {
-        if (Texture == null)
+        if (Sprite.Texture == null)
             return;
-
-        spriteBatch.Draw(Texture, _position, Color);
 
         if (_parentTransform != null)
         {
-            spriteBatch.Draw(Texture, _position, null, Color, _parentTransform.Rotation, Vector2.Zero, _parentTransform.Scale, SpriteEffects.None, 0f);
+            spriteBatch.Draw(Sprite.Texture, _position, null, Sprite.Color, _parentTransform.Rotation, Sprite.Origin, _parentTransform.Scale, SpriteEffects.None, _layerDepth);
+        }
+        else
+        {
+            spriteBatch.Draw(Sprite.Texture, _position, null, Sprite.Color, 0f, origin: Sprite.Origin, Vector2.One, SpriteEffects.None, _layerDepth);
         }
     }
 
-    public void Init()
+    public void SetParentEntity(Entity entity)
     {
-        if (_parentTransform != null)
-        {
-            _position = _parentTransform.Position;
-        }
+        _parentEntity = entity;
 
-        GameManager.Instance.RegisterRenderer(this);
+        if (_parentEntity.TryGetComponent(out Transform transform))
+        {
+            _parentTransform = transform;
+            _position = transform.Position;
+        }
     }
 
     public void Destroy()
     {
-        GameManager.Instance.UnregisterRenderer(this);
-        Texture = null;
+        RendererManager.UnregisterRenderer(this);
+        Sprite.Texture?.Dispose();
         _parentTransform = null;
     }
 }

@@ -1,16 +1,13 @@
 using Microsoft.Xna.Framework;
 
-namespace Roguely;
+namespace Roguely.Core.Components;
 
 public class SquareCollider : Collider
 {
-    public BoundingBox BoundingBox { get; private set; }
+    public Rectangle Bounds { get; private set; }
 
     public SquareCollider(Vector2 size)
     {
-        BoundingBox = new BoundingBox(
-            new Vector3(-size.X / 2, -size.Y / 2, 0),
-            new Vector3(size.X / 2, size.Y / 2, 0)
-        );
+        Bounds = new Rectangle(0, 0, (int)size.X, (int)size.Y);
     }
 }

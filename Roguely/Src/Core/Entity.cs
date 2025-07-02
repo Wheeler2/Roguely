@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using Roguely.Core.Components;
+using Roguely.Core.Entities;
 
-namespace Roguely.Core.Entities;
+namespace Roguely.Core;
 
 public abstract class Entity
 {
@@ -10,6 +12,8 @@ public abstract class Entity
     {
         Id = Guid.NewGuid();
         _components = new HashSet<IComponent>();
+
+        EntityManager.RegisterEntity(this);
     }
 
     protected HashSet<IComponent> _components = new();
@@ -28,10 +32,17 @@ public abstract class Entity
     {
         if (component == null)
             throw new ArgumentNullException(nameof(component));
+
         if (_components.Contains(component))
             throw new InvalidOperationException("Component already added to this entity.");
+
+        // Automatically set parent entity if the component supports it
+        if (component is SpriteRenderer spriteRenderer)
+            spriteRenderer.SetParentEntity(this);
+
         _components.Add(component);
         component.Init();
+
         return this;
     }
 
@@ -39,10 +50,13 @@ public abstract class Entity
     {
         if (component == null)
             throw new ArgumentNullException(nameof(component));
+
         if (!_components.Contains(component))
             throw new InvalidOperationException("Component not found in this entity.");
+
         _components.Remove(component);
         component.Destroy();
+
         return this;
     }
 
@@ -67,6 +81,20 @@ public abstract class Entity
         throw new InvalidOperationException($"Component of type {typeof(T).Name} not found in this entity.");
     }
 
+    public bool TryGetComponent<T>(out T component) where T : IComponent
+    {
+        foreach (var comp in _components)
+        {
+            if (comp is T typedComponent)
+            {
+                component = typedComponent;
+                return true;
+            }
+        }
+        component = default;
+        return false;
+    }
+
     public void SetEnabled(bool enabled)
     {
         Enabled = enabled;
@@ -85,18 +113,17 @@ public abstract class Entity
     /// This method should be called by the game manager or main loop.
     /// It will call the Update method of each component and then the entity's own Update method.
     /// </summary>
-    /// <param name="deltaTime">The time elapsed since the last update.</param>
-    public void BaseUpdate(float deltaTime)
+    public void BaseUpdate()
     {
         foreach (var component in _components)
         {
-            component.Update(deltaTime);
+            component.Update();
         }
 
-        Update(deltaTime);
+        Update();
     }
 
     protected virtual void OnEnabled() { }
     protected virtual void OnDisabled() { }
-    protected virtual void Update(float deltaTime) { }
+    protected virtual void Update() { }
 }

@@ -4,9 +4,11 @@
   <Platform>DesktopGL</Platform>
   <Config />
   <SourceFiles>
+    <File>E:/Kevin/Documents/c# projects/Roguely/Roguely/Content/DefaultFont.spritefont</File>
     <File>E:/Kevin/Documents/c# projects/Roguely/Roguely/Content/Sprites/Barbarian.png</File>
   </SourceFiles>
   <DestFiles>
+    <File xsi:nil="true" />
     <File xsi:nil="true" />
   </DestFiles>
 </SourceFileCollection>
