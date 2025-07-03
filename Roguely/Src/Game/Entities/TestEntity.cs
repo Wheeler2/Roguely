@@ -31,12 +31,12 @@ namespace Roguely.Entities
 
             // Set initial position
             transform.Position = _centerPosition + new Vector2(
-                (float)Math.Cos(_time) * _radius,
-                (float)Math.Sin(_time) * _radius
+                MathF.Cos(_time) * _radius,
+                MathF.Sin(_time) * _radius
             );
 
-            AddComponent(transform)
-                .AddComponent(new SpriteRenderer(sprite, transform));
+            AddComponent(transform);
+            AddComponent(new SpriteRenderer(sprite, transform));
         }
 
         protected override void Update()
@@ -46,8 +46,8 @@ namespace Roguely.Entities
             // Move in a circle
             Transform transform = GetComponent<Transform>();
             transform.Position = _centerPosition + new Vector2(
-                (float)Math.Cos(_time) * _radius,
-                (float)Math.Sin(_time) * _radius
+                MathF.Cos(_time) * _radius,
+                MathF.Sin(_time) * _radius
             );
         }
     }

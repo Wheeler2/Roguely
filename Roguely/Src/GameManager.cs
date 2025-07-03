@@ -34,6 +34,7 @@ public class GameManager : Game
     protected override void BeginRun()
     {
         new Player();
+        new TestEntity(new Vector2(100, 100));
 
         base.BeginRun();
     }
