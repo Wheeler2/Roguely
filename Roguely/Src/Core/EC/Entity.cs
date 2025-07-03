@@ -11,7 +11,7 @@ public class Entity : IDisposable
     public Entity()
     {
         Id = Guid.NewGuid();
-        _components = new HashSet<IComponent>();
+        _components = new Dictionary<Type, IComponent>();
 
         EntityManager.RegisterEntity(this);
     }
@@ -21,7 +21,7 @@ public class Entity : IDisposable
         Dispose();
     }
 
-    protected HashSet<IComponent> _components = new();
+    protected Dictionary<Type, IComponent> _components = new();
 
     /// <summary>
     /// Indicates whether the entity is enabled. If false, the entity will not be updated or
@@ -38,14 +38,14 @@ public class Entity : IDisposable
         if (component == null)
             throw new ArgumentNullException(nameof(component));
 
-        if (_components.Contains(component))
+        if (_components.ContainsKey(component.GetType()))
             throw new InvalidOperationException("Component already added to this entity.");
 
         // Automatically set parent entity if the component supports it
         if (component is SpriteRenderer spriteRenderer)
             spriteRenderer.SetParentEntity(this);
 
-        _components.Add(component);
+        _components.Add(component.GetType(), component);
         component.Init();
 
         return this;
@@ -56,10 +56,10 @@ public class Entity : IDisposable
         if (component == null)
             throw new ArgumentNullException(nameof(component));
 
-        if (!_components.Contains(component))
+        if (!_components.ContainsKey(component.GetType()))
             throw new InvalidOperationException("Component not found in this entity.");
 
-        _components.Remove(component);
+        _components.Remove(component.GetType());
         component.Destroy();
 
         return this;
@@ -67,34 +67,24 @@ public class Entity : IDisposable
 
     public bool HasComponent<T>() where T : IComponent
     {
-        foreach (var component in _components)
-        {
-            if (component is T)
-
-                return true;
-        }
-        return false;
+        return _components.TryGetValue(typeof(T), out var component) && component != null;
     }
 
     public T GetComponent<T>() where T : IComponent
     {
-        foreach (var component in _components)
+        if (_components.TryGetValue(typeof(T), out var foundComponent) && foundComponent != null)
         {
-            if (component is T typedComponent)
-                return typedComponent;
+            return (T)foundComponent;
         }
         throw new InvalidOperationException($"Component of type {typeof(T).Name} not found in this entity.");
     }
 
     public bool TryGetComponent<T>(out T component) where T : IComponent
     {
-        foreach (var comp in _components)
+        if (_components.TryGetValue(typeof(T), out var foundComponent) && foundComponent != null)
         {
-            if (comp is T typedComponent)
-            {
-                component = typedComponent;
-                return true;
-            }
+            component = (T)foundComponent;
+            return true;
         }
         component = default;
         return false;
@@ -120,7 +110,7 @@ public class Entity : IDisposable
     /// </summary>
     public void BaseUpdate()
     {
-        foreach (var component in _components)
+        foreach (var component in _components.Values)
         {
             component.Update();
         }
@@ -135,7 +125,7 @@ public class Entity : IDisposable
     public void Dispose()
     {
         // Clean up components
-        foreach (var component in _components)
+        foreach (var component in _components.Values)
         {
             component.Destroy();
         }

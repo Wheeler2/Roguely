@@ -75,7 +75,7 @@ public class SpriteRenderer : IComponent, IRenderer
     public void Destroy()
     {
         RendererManager.UnregisterRenderer(this);
-        Sprite.Texture?.Dispose();
         _parentTransform = null;
+        _parentEntity = null;
     }
 }
